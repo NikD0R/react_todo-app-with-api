@@ -1,60 +1,125 @@
+/* eslint-disable @typescript-eslint/no-shadow */
 /* eslint-disable jsx-a11y/label-has-associated-control */
 import cn from 'classnames';
 import { Todo } from '../../types/Todo';
 import * as todosService from '../../api/todos';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 type Props = {
   updateTodo: (value: Todo) => Promise<void>;
-  updateTitleTodo: (value: Todo) => Promise<void>;
   todo: Todo;
   deleteTodo: (id: number) => Promise<void>;
   isChanging: boolean;
   isChangingSeveral: boolean;
   isSubmitting?: boolean;
-  editedTitle: string;
-  setEditedTitle: React.Dispatch<React.SetStateAction<string>>;
+  setTodos: React.Dispatch<React.SetStateAction<Todo[]>>;
+  setChangingTodoId: React.Dispatch<React.SetStateAction<number | null>>;
+  setError: React.Dispatch<React.SetStateAction<string | null>>;
+  allErrors: { [key: string]: string };
 };
 
 export const ToDo: React.FC<Props> = ({
   updateTodo,
-  updateTitleTodo,
   todo,
   deleteTodo,
   isChanging,
   isChangingSeveral,
   isSubmitting,
-  editedTitle,
-  setEditedTitle,
+  setTodos,
+  setChangingTodoId,
+  setError,
+  allErrors,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
+  const [editedTitle, setEditedTitle] = useState(todo.title);
   const todoEditingInput = useRef<HTMLInputElement>(null);
+
+  function updateTitleTodo(todo: Todo) {
+    const updatedTodo = {
+      ...todo,
+      title: editedTitle,
+    };
+
+    setChangingTodoId(updatedTodo.id);
+
+    return todosService
+      .updateTodo(updatedTodo)
+      .then(() =>
+        setTodos(tds => {
+          return tds.map(todo =>
+            todo.id === updatedTodo.id ? { ...todo, title: editedTitle } : todo,
+          );
+        }),
+      )
+      .catch(e => {
+        setError(allErrors.updatingTodo);
+        throw e;
+      })
+      .finally(() => {
+        setChangingTodoId(null);
+      });
+  }
 
   function handleUpdateSubmit(event: React.FormEvent) {
     event.preventDefault();
-    if (!editedTitle.trim()) {
+    const normalizedEditedTitle = editedTitle.trim();
+
+    if (!normalizedEditedTitle) {
       deleteTodo(todo.id);
       setIsEditing(false);
 
       return;
     }
 
-    if (editedTitle.trim() === todo.title) {
+    if (normalizedEditedTitle === todo.title) {
       setIsEditing(false);
-      setEditedTitle(todo.title);
+      setEditedTitle(todo.title.trim());
 
       return;
     }
 
     updateTitleTodo({
       id: todo.id,
-      title: editedTitle,
+      title: normalizedEditedTitle,
       completed: todo.completed,
       userId: todosService.USER_ID,
     }).then(() => {
+      setEditedTitle(normalizedEditedTitle);
       setIsEditing(false);
     });
   }
+
+  function handleBlur() {
+    const normalizedEditedTitle = editedTitle.trim();
+
+    if (!normalizedEditedTitle) {
+      deleteTodo(todo.id);
+      setIsEditing(false);
+
+      return;
+    }
+
+    if (normalizedEditedTitle === todo.title) {
+      setIsEditing(false);
+      setEditedTitle(todo.title.trim());
+
+      return;
+    }
+
+    updateTitleTodo({
+      ...todo,
+      title: normalizedEditedTitle,
+    }).then(() => {
+      setEditedTitle(normalizedEditedTitle);
+      setIsEditing(false);
+    });
+  }
+
+  useEffect(() => {
+    if (isEditing) {
+      todoEditingInput.current?.focus();
+    }
+  }, [isEditing]);
 
   return (
     <div
@@ -83,7 +148,13 @@ export const ToDo: React.FC<Props> = ({
             placeholder="Empty todo will be deleted"
             value={editedTitle}
             onChange={event => setEditedTitle(event.target.value)}
-            onBlur={() => setIsEditing(false)}
+            onBlur={handleBlur}
+            onKeyUp={event => {
+              if (event.key === 'Escape') {
+                setEditedTitle(todo.title.trim());
+                setIsEditing(false);
+              }
+            }}
             ref={todoEditingInput}
           />
         </form>
@@ -94,6 +165,7 @@ export const ToDo: React.FC<Props> = ({
             className="todo__title"
             onDoubleClick={() => {
               todoEditingInput.current?.focus();
+              setEditedTitle(todo.title);
               setIsEditing(true);
             }}
           >

@@ -21,7 +21,6 @@ export const App: React.FC = () => {
   const [changingTodoId, setChangingTodoId] = useState<number | null>(null);
   const [changingTodoIds, setChangingTodoIds] = useState<number[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [editedTitle, setEditedTitle] = useState('');
 
   const activeCount = todos.filter(todo => !todo.completed).length;
   const mainInput = useRef<HTMLInputElement>(null);
@@ -30,7 +29,7 @@ export const App: React.FC = () => {
     loadingTodos: 'Unable to load todos',
     addingTodo: 'Unable to add a todo',
     deletingTodo: 'Unable to delete a todo',
-    updatingTodo: ' Unable to update a todo',
+    updatingTodo: 'Unable to update a todo',
     checkingEmptyTitle: 'Title should not be empty',
   };
 
@@ -150,32 +149,6 @@ export const App: React.FC = () => {
       });
   }
 
-  function updateTitleTodo(todo: Todo) {
-    const updatedTodo = {
-      ...todo,
-      title: editedTitle,
-    };
-
-    setChangingTodoId(updatedTodo.id);
-
-    return todosService
-      .updateTodo(updatedTodo)
-      .then(() =>
-        setTodos(tds => {
-          return tds.map(todo =>
-            todo.id === updatedTodo.id ? { ...todo, title: editedTitle } : todo,
-          );
-        }),
-      )
-      .catch(e => {
-        setError(allErrors.updatingTodo);
-        throw e;
-      })
-      .finally(() => {
-        setChangingTodoId(null);
-      });
-  }
-
   useEffect(() => {
     mainInput.current?.focus();
 
@@ -224,9 +197,10 @@ export const App: React.FC = () => {
               deleteTodo={deleteTodo}
               isChanging={changingTodoId === todo.id}
               isChangingSeveral={changingTodoIds.includes(todo.id)}
-              editedTitle={editedTitle}
-              setEditedTitle={setEditedTitle}
-              updateTitleTodo={updateTitleTodo}
+              setTodos={setTodos}
+              setChangingTodoId={setChangingTodoId}
+              setError={setError}
+              allErrors={allErrors}
               key={todo.id}
             />
           ))}
@@ -237,9 +211,10 @@ export const App: React.FC = () => {
               deleteTodo={deleteTodo}
               isChanging={changingTodoId === tempTodo.id}
               isChangingSeveral={changingTodoIds.includes(tempTodo.id)}
-              editedTitle={editedTitle}
-              setEditedTitle={setEditedTitle}
-              updateTitleTodo={updateTitleTodo}
+              setTodos={setTodos}
+              setChangingTodoId={setChangingTodoId}
+              setError={setError}
+              allErrors={allErrors}
               isSubmitting={isSubmitting}
             />
           )}
