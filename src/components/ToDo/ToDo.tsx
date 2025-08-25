@@ -1,7 +1,7 @@
 /* eslint-disable jsx-a11y/label-has-associated-control */
 import cn from 'classnames';
 import { Todo } from '../../types/Todo';
-import { useState } from 'react';
+import * as todosService from '../../api/todos';
 
 type Props = {
   updateTodo: (value: Todo) => Promise<void>;
@@ -12,6 +12,8 @@ type Props = {
   isSubmitting?: boolean;
   setChangingTodoId: React.Dispatch<React.SetStateAction<number | null>>;
   changingTodoId: number | null;
+  editedTitle: string;
+  setEditedTitle: React.Dispatch<React.SetStateAction<string>>;
 };
 
 export const ToDo: React.FC<Props> = ({
@@ -23,8 +25,19 @@ export const ToDo: React.FC<Props> = ({
   isSubmitting,
   setChangingTodoId,
   changingTodoId,
+  editedTitle,
+  setEditedTitle,
 }) => {
-  const [, setEditedTitle] = useState('');
+  function handleUpdateSubmit(event: React.FormEvent) {
+    event.preventDefault();
+
+    updateTodo({
+      id: todo.id,
+      title: editedTitle,
+      completed: todo.completed,
+      userId: todosService.USER_ID,
+    });
+  }
 
   return (
     <div
@@ -45,13 +58,13 @@ export const ToDo: React.FC<Props> = ({
       </label>
 
       {changingTodoId === todo.id ? (
-        <form>
+        <form onSubmit={handleUpdateSubmit}>
           <input
             data-cy="TodoTitlemainInput"
             type="text"
             className="todo__title-mainInput"
             placeholder="Empty todo will be deleted"
-            value={todo.title}
+            value={editedTitle}
             onChange={event => setEditedTitle(event.target.value)}
           />
         </form>

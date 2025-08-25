@@ -21,6 +21,7 @@ export const App: React.FC = () => {
   const [changingTodoId, setChangingTodoId] = useState<number | null>(null);
   const [changingTodoIds, setChangingTodoIds] = useState<number[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [editedTitle, setEditedTitle] = useState('');
 
   const activeCount = todos.filter(todo => !todo.completed).length;
   const mainInput = useRef<HTMLInputElement>(null);
@@ -120,7 +121,11 @@ export const App: React.FC = () => {
   }
 
   function updateTodo(todo: Todo) {
-    const updatedTodo = { ...todo, completed: !todo.completed };
+    const updatedTodo = {
+      ...todo,
+      completed: !todo.completed,
+      title: editedTitle,
+    };
 
     setChangingTodoId(updatedTodo.id);
     setChangingTodoIds(ids => [...ids, updatedTodo.id]);
@@ -131,7 +136,7 @@ export const App: React.FC = () => {
         setTodos(tds => {
           return tds.map(todo =>
             todo.id === updatedTodo.id
-              ? { ...todo, completed: !todo.completed }
+              ? { ...todo, completed: !todo.completed, title: editedTitle }
               : todo,
           );
         }),
@@ -196,6 +201,8 @@ export const App: React.FC = () => {
               changingTodoId={changingTodoId}
               setChangingTodoId={setChangingTodoId}
               isChangingSeveral={changingTodoIds.includes(todo.id)}
+              editedTitle={editedTitle}
+              setEditedTitle={setEditedTitle}
               key={todo.id}
             />
           ))}
@@ -208,6 +215,8 @@ export const App: React.FC = () => {
               changingTodoId={changingTodoId}
               setChangingTodoId={setChangingTodoId}
               isChangingSeveral={changingTodoIds.includes(tempTodo.id)}
+              editedTitle={editedTitle}
+              setEditedTitle={setEditedTitle}
               isSubmitting={isSubmitting}
             />
           )}
