@@ -124,7 +124,6 @@ export const App: React.FC = () => {
     const updatedTodo = {
       ...todo,
       completed: !todo.completed,
-      title: editedTitle,
     };
 
     setChangingTodoId(updatedTodo.id);
@@ -136,7 +135,7 @@ export const App: React.FC = () => {
         setTodos(tds => {
           return tds.map(todo =>
             todo.id === updatedTodo.id
-              ? { ...todo, completed: !todo.completed, title: editedTitle }
+              ? { ...todo, completed: !todo.completed }
               : todo,
           );
         }),
@@ -148,6 +147,32 @@ export const App: React.FC = () => {
       .finally(() => {
         setChangingTodoId(null);
         setChangingTodoIds(ids => ids.filter(item => item !== updatedTodo.id));
+      });
+  }
+
+  function updateTitleTodo(todo: Todo) {
+    const updatedTodo = {
+      ...todo,
+      title: editedTitle,
+    };
+
+    setChangingTodoId(updatedTodo.id);
+
+    return todosService
+      .updateTodo(updatedTodo)
+      .then(() =>
+        setTodos(tds => {
+          return tds.map(todo =>
+            todo.id === updatedTodo.id ? { ...todo, title: editedTitle } : todo,
+          );
+        }),
+      )
+      .catch(e => {
+        setError(allErrors.updatingTodo);
+        throw e;
+      })
+      .finally(() => {
+        setChangingTodoId(null);
       });
   }
 
@@ -198,11 +223,10 @@ export const App: React.FC = () => {
               todo={todo}
               deleteTodo={deleteTodo}
               isChanging={changingTodoId === todo.id}
-              changingTodoId={changingTodoId}
-              setChangingTodoId={setChangingTodoId}
               isChangingSeveral={changingTodoIds.includes(todo.id)}
               editedTitle={editedTitle}
               setEditedTitle={setEditedTitle}
+              updateTitleTodo={updateTitleTodo}
               key={todo.id}
             />
           ))}
@@ -212,11 +236,10 @@ export const App: React.FC = () => {
               todo={tempTodo}
               deleteTodo={deleteTodo}
               isChanging={changingTodoId === tempTodo.id}
-              changingTodoId={changingTodoId}
-              setChangingTodoId={setChangingTodoId}
               isChangingSeveral={changingTodoIds.includes(tempTodo.id)}
               editedTitle={editedTitle}
               setEditedTitle={setEditedTitle}
+              updateTitleTodo={updateTitleTodo}
               isSubmitting={isSubmitting}
             />
           )}
