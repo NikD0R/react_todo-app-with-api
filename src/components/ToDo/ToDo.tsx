@@ -37,7 +37,7 @@ export const ToDo: React.FC<Props> = ({
   function updateTitleTodo(todo: Todo) {
     const updatedTodo = {
       ...todo,
-      title: editedTitle,
+      title: editedTitle.trim(),
     };
 
     setChangingTodoId(updatedTodo.id);
@@ -47,7 +47,9 @@ export const ToDo: React.FC<Props> = ({
       .then(() =>
         setTodos(tds => {
           return tds.map(todo =>
-            todo.id === updatedTodo.id ? { ...todo, title: editedTitle } : todo,
+            todo.id === updatedTodo.id
+              ? { ...todo, title: editedTitle.trim() }
+              : todo,
           );
         }),
       )
@@ -66,7 +68,6 @@ export const ToDo: React.FC<Props> = ({
 
     if (!normalizedEditedTitle) {
       deleteTodo(todo.id);
-      setIsEditing(false);
 
       return;
     }
