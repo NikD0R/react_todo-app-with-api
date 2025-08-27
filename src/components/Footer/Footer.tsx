@@ -66,7 +66,9 @@ export const Footer: React.FC<Props> = ({
         onClick={() => {
           const completedTodo = visibleTodos.filter(todo => todo.completed);
 
-          completedTodo.forEach(todo => deleteTodo(todo.id));
+          const promises = completedTodo.map(todo => deleteTodo(todo.id));
+
+          Promise.all(promises);
         }}
       >
         Clear completed
